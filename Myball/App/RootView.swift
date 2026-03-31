@@ -33,17 +33,11 @@ struct RootView: View {
                     Label("캘린더", systemImage: "calendar")
                 }
 
-            // 설정 탭 (Phase 5에서 구현)
-            VStack(spacing: Theme.Spacing.large) {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 40))
-                    .foregroundStyle(Theme.Colors.secondaryLabel)
-                Text("설정 화면은 Phase 5에서 구현됩니다")
-                    .foregroundStyle(Theme.Colors.secondaryLabel)
-            }
-            .tabItem {
-                Label("설정", systemImage: "gearshape")
-            }
+            // 설정 탭
+            SettingsView()
+                .tabItem {
+                    Label("설정", systemImage: "gearshape")
+                }
 
             // 디버그 탭 (개발 중에만 표시)
             #if DEBUG

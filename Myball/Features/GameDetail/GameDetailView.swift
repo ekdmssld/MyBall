@@ -1,6 +1,6 @@
 // GameDetailView.swift
 // 경기 상세 화면 — 양팀 정보, 스코어, 경기장, 시간 표시
-// Phase 5에서 캘린더 추가 / 배경화면 기능 연결
+// 캘린더 추가 / 배경화면 생성 기능 포함
 
 import SwiftUI
 import Kingfisher
@@ -8,6 +8,12 @@ import Kingfisher
 struct GameDetailView: View {
     let game: Game
     let myTeamId: String
+
+    @State private var showCalendarAlert = false
+    @State private var calendarAlertMessage = ""
+    @State private var showWallpaper = false
+
+    private let calendarService = CalendarService()
 
     var body: some View {
         ScrollView {
@@ -20,12 +26,23 @@ struct GameDetailView: View {
 
                 // 경기 정보
                 gameInfoSection
+
+                // 액션 버튼들
+                actionButtons
             }
             .padding(Theme.Spacing.large)
         }
         .background(Theme.Colors.background)
         .navigationTitle("경기 상세")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("캘린더", isPresented: $showCalendarAlert) {
+            Button("확인") {}
+        } message: {
+            Text(calendarAlertMessage)
+        }
+        .sheet(isPresented: $showWallpaper) {
+            WallpaperGeneratorView(game: game, myTeamId: myTeamId)
+        }
     }
 
     // MARK: - 경기 상태 배지
@@ -183,6 +200,53 @@ struct GameDetailView: View {
 
             Spacer()
         }
+    }
+
+    // MARK: - 액션 버튼들 (캘린더 추가 + 배경화면)
+    private var actionButtons: some View {
+        VStack(spacing: Theme.Spacing.medium) {
+            // 캘린더에 추가 버튼
+            Button {
+                Task { await addToCalendar() }
+            } label: {
+                Label("캘린더에 추가", systemImage: "calendar.badge.plus")
+                    .font(.system(size: 15, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Theme.Colors.primary)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
+            }
+
+            // 배경화면 만들기 버튼 (예정된 경기만)
+            if game.status == .scheduled {
+                Button {
+                    showWallpaper = true
+                } label: {
+                    Label("배경화면 만들기", systemImage: "photo.artframe")
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Theme.Colors.secondaryBackground)
+                        .foregroundStyle(Theme.Colors.label)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                                .stroke(Theme.Colors.primary.opacity(0.3), lineWidth: 1)
+                        )
+                }
+            }
+        }
+    }
+
+    // 캘린더 추가 로직
+    private func addToCalendar() async {
+        if let errorMessage = await calendarService.addGameToCalendar(game, myTeamId: myTeamId) {
+            calendarAlertMessage = errorMessage
+        } else {
+            calendarAlertMessage = "경기 일정이 캘린더에 추가되었습니다!"
+        }
+        showCalendarAlert = true
     }
 
     // 경기 상태별 색상

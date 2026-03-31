@@ -30,6 +30,10 @@ enum Constants {
         "\(espnBaseURL)/\(league)/teams"
     }
 
+    // MARK: - Notification
+    static let notificationEnabledKey = "notificationEnabled"
+    static let notificationLeadTimeKey = "notificationLeadTime" // 분 단위 (30, 60, 120)
+
     // MARK: - Cache
     // 캐시 만료 시간 (30분 = 1800초)
     static let cacheExpirationInterval: TimeInterval = 30 * 60
