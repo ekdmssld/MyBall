@@ -3,6 +3,7 @@
 // ViewModel = Flutter의 ChangeNotifier / Riverpod Provider와 비슷
 
 import SwiftUI
+import Combine
 
 // @MainActor: 모든 프로퍼티 변경이 메인 스레드에서 실행됨 (UI 업데이트 안전)
 // ObservableObject: SwiftUI가 이 객체의 변경을 감시 (Flutter의 ChangeNotifier)

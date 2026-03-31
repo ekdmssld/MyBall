@@ -2,6 +2,7 @@
 // 설정 화면 상태 관리
 
 import SwiftUI
+import Combine
 
 @MainActor
 final class SettingsViewModel: ObservableObject {

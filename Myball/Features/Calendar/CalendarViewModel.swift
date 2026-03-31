@@ -2,6 +2,7 @@
 // 캘린더 화면의 상태 관리 — 월 이동, 경기 로드, 날짜 선택
 
 import SwiftUI
+import Combine
 
 @MainActor
 final class CalendarViewModel: ObservableObject {
