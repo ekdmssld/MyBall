@@ -67,15 +67,7 @@ struct GameTimelineProvider: TimelineProvider {
                 return
             }
 
-            if team.league == .kbo {
-                // KBO는 API 미지원
-                let entry = GameEntry(date: Date(), team: team, nextGame: nil, upcomingGames: [], isKBO: true)
-                let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(60 * 60)))
-                completion(timeline)
-                return
-            }
-
-            // ESPN API에서 향후 7일 경기 가져오기
+            // KBO: 공식 사이트 API / MLB: ESPN API
             let games = await WidgetAPIClient.fetchUpcomingGames(team: team, days: 7)
 
             // 다음 경기 = 현재 시각 이후의 예정된 경기 중 가장 빠른 것

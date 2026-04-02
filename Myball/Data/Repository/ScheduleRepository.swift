@@ -6,6 +6,7 @@ import Foundation
 // ScheduleRepositoryProtocol을 실제로 구현하는 클래스
 final class ScheduleRepository: ScheduleRepositoryProtocol {
     private let apiClient = APIClient.shared
+    private let kboClient = KBOAPIClient.shared
     private let cache = ScheduleCache.shared
 
     // MARK: - 특정 날짜의 경기 조회
@@ -27,9 +28,34 @@ final class ScheduleRepository: ScheduleRepositoryProtocol {
     }
 
     // MARK: - 특정 월의 전체 경기 조회
-    // 해당 월의 각 날짜별로 API를 호출하되, 캐시를 활용
-    // 개별 날짜 실패는 무시하고 성공한 날짜의 경기만 수집
     func fetchMonthGames(league: League, year: Int, month: Int) async throws -> [Game] {
+        switch league {
+        case .kbo:
+            return try await fetchKBOMonthGames(year: year, month: month)
+        case .mlb:
+            return try await fetchMLBMonthGames(year: year, month: month)
+        }
+    }
+
+    // MARK: - KBO: 공식 사이트 API (한 번 호출로 월별 전체 조회)
+    private func fetchKBOMonthGames(year: Int, month: Int) async throws -> [Game] {
+        let cacheKey = "\(year)\(String(format: "%02d", month))"
+
+        // 캐시 확인
+        if let cached = cache.get(league: .kbo, date: cacheKey) {
+            return cached
+        }
+
+        let games = try await kboClient.fetchMonthSchedule(year: year, month: month)
+
+        // 캐시 저장
+        cache.set(games: games, league: .kbo, date: cacheKey)
+
+        return games
+    }
+
+    // MARK: - MLB: ESPN API (날짜별 병렬 조회)
+    private func fetchMLBMonthGames(year: Int, month: Int) async throws -> [Game] {
         var calendar = Calendar.current
         calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
 
@@ -38,16 +64,12 @@ final class ScheduleRepository: ScheduleRepositoryProtocol {
         }
 
         let daysInMonth = startDate.daysInMonth
-
-        // 각 태스크의 결과: 성공(경기 배열) 또는 실패(nil)
-        // nil = API 에러, 빈 배열 = 그 날 경기가 없음 (정상)
         typealias DayResult = [Game]?
 
         var allGames: [Game] = []
         var successCount = 0
 
         // withTaskGroup (non-throwing): 개별 날짜 실패가 전체를 중단시키지 않음
-        // 이전에는 withThrowingTaskGroup을 사용해서 1개 실패 시 전체가 실패했음
         await withTaskGroup(of: DayResult.self) { group in
             for day in 1...daysInMonth {
                 guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else {
@@ -56,15 +78,13 @@ final class ScheduleRepository: ScheduleRepositoryProtocol {
 
                 group.addTask { [self] in
                     do {
-                        return try await fetchGames(league: league, date: date)
+                        return try await fetchGames(league: .mlb, date: date)
                     } catch {
-                        // 개별 날짜 실패는 nil로 처리 (다른 날짜에 영향 없음)
                         return nil
                     }
                 }
             }
 
-            // 모든 결과 수집
             for await result in group {
                 if let games = result {
                     successCount += 1
@@ -73,12 +93,11 @@ final class ScheduleRepository: ScheduleRepositoryProtocol {
             }
         }
 
-        // 성공한 날짜가 하나도 없으면 API 문제
         if successCount == 0 {
             throw APIError.noData
         }
 
-        // 중복 제거 (같은 경기가 다른 날짜에 포함될 수 있음)
+        // 중복 제거
         var seen = Set<String>()
         allGames = allGames.filter { game in
             if seen.contains(game.id) { return false }
