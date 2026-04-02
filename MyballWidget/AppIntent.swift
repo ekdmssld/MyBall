@@ -1,18 +1,5 @@
-//
-//  AppIntent.swift
-//  MyballWidget
-//
-//  Created by 정다은 on 3/23/26.
-//
+// AppIntent.swift
+// 현재 사용하지 않음 — StaticConfiguration 위젯 사용 중
+// 추후 위젯에서 팀 선택 등 인터랙션이 필요하면 AppIntent 활용 가능
 
-import WidgetKit
-import AppIntents
-
-struct ConfigurationAppIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "Configuration" }
-    static var description: IntentDescription { "This is an example widget." }
-
-    // An example configurable parameter.
-    @Parameter(title: "Favorite Emoji", default: "😃")
-    var favoriteEmoji: String
-}
+import Foundation

@@ -29,6 +29,29 @@ struct CalendarMainView: View {
                     Spacer()
                     ProgressView("경기 일정을 불러오는 중...")
                     Spacer()
+                } else if let error = viewModel.errorMessage {
+                    // 에러 메시지 표시 (이전에는 에러가 있어도 빈 캘린더만 보였음)
+                    Spacer()
+                    VStack(spacing: Theme.Spacing.medium) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 40))
+                            .foregroundStyle(Theme.Colors.secondaryLabel)
+                        Text(error)
+                            .font(Theme.Fonts.body)
+                            .foregroundStyle(Theme.Colors.secondaryLabel)
+                            .multilineTextAlignment(.center)
+                        Button("다시 시도") {
+                            Task { await viewModel.loadGames() }
+                        }
+                        .font(.system(size: 15, weight: .semibold))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Theme.Colors.primary)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                    }
+                    .padding(Theme.Spacing.large)
+                    Spacer()
                 } else {
                     calendarGrid
                 }
@@ -142,6 +165,10 @@ struct CalendarMainView: View {
                 }
             }
             .padding(.horizontal, Theme.Spacing.small)
+        }
+        // 아래로 당겨서 새로고침 (Flutter의 RefreshIndicator와 비슷)
+        .refreshable {
+            await viewModel.loadGames()
         }
     }
 

@@ -1,9 +1,5 @@
-//
-//  MyballWidgetBundle.swift
-//  MyballWidget
-//
-//  Created by 정다은 on 3/23/26.
-//
+// MyballWidgetBundle.swift
+// 위젯 번들 — 앱에서 제공하는 위젯 목록
 
 import WidgetKit
 import SwiftUI
@@ -12,7 +8,5 @@ import SwiftUI
 struct MyballWidgetBundle: WidgetBundle {
     var body: some Widget {
         MyballWidget()
-        MyballWidgetControl()
-        MyballWidgetLiveActivity()
     }
 }

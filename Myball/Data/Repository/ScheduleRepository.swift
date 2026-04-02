@@ -27,10 +27,9 @@ final class ScheduleRepository: ScheduleRepositoryProtocol {
     }
 
     // MARK: - 특정 월의 전체 경기 조회
-    // 한 달치 경기를 가져오기 위해 매일 API를 호출하면 비효율적
-    // → 해당 월의 각 날짜별로 호출하되, 캐시를 활용
+    // 해당 월의 각 날짜별로 API를 호출하되, 캐시를 활용
+    // 개별 날짜 실패는 무시하고 성공한 날짜의 경기만 수집
     func fetchMonthGames(league: League, year: Int, month: Int) async throws -> [Game] {
-        // 해당 월의 시작일과 일수 계산
         var calendar = Calendar.current
         calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
 
@@ -39,26 +38,44 @@ final class ScheduleRepository: ScheduleRepositoryProtocol {
         }
 
         let daysInMonth = startDate.daysInMonth
-        var allGames: [Game] = []
 
-        // 각 날짜별로 경기 조회 (캐시 히트가 많으면 빠름)
-        // withThrowingTaskGroup: 여러 비동기 작업을 동시에 실행 (Flutter의 Future.wait과 비슷)
-        try await withThrowingTaskGroup(of: [Game].self) { group in
+        // 각 태스크의 결과: 성공(경기 배열) 또는 실패(nil)
+        // nil = API 에러, 빈 배열 = 그 날 경기가 없음 (정상)
+        typealias DayResult = [Game]?
+
+        var allGames: [Game] = []
+        var successCount = 0
+
+        // withTaskGroup (non-throwing): 개별 날짜 실패가 전체를 중단시키지 않음
+        // 이전에는 withThrowingTaskGroup을 사용해서 1개 실패 시 전체가 실패했음
+        await withTaskGroup(of: DayResult.self) { group in
             for day in 1...daysInMonth {
                 guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day)) else {
                     continue
                 }
 
-                // 각 날짜를 병렬로 조회 (네트워크가 빠르면 동시에 여러 요청)
                 group.addTask { [self] in
-                    try await fetchGames(league: league, date: date)
+                    do {
+                        return try await fetchGames(league: league, date: date)
+                    } catch {
+                        // 개별 날짜 실패는 nil로 처리 (다른 날짜에 영향 없음)
+                        return nil
+                    }
                 }
             }
 
             // 모든 결과 수집
-            for try await games in group {
-                allGames.append(contentsOf: games)
+            for await result in group {
+                if let games = result {
+                    successCount += 1
+                    allGames.append(contentsOf: games)
+                }
             }
+        }
+
+        // 성공한 날짜가 하나도 없으면 API 문제
+        if successCount == 0 {
+            throw APIError.noData
         }
 
         // 중복 제거 (같은 경기가 다른 날짜에 포함될 수 있음)

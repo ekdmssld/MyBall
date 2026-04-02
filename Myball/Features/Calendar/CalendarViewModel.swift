@@ -31,10 +31,22 @@ final class CalendarViewModel: ObservableObject {
         let year = calendar.component(.year, from: currentMonth)
         let month = calendar.component(.month, from: currentMonth)
 
+        // KBO ESPN API는 현재 동작하지 않음 (400 에러 반환)
+        if team.league == .kbo {
+            games = []
+            errorMessage = "KBO 리그 데이터는 현재 ESPN API에서\n제공되지 않습니다.\n\n설정에서 MLB 팀으로 변경해주세요."
+            isLoading = false
+            return
+        }
+
         do {
             games = try await useCase.execute(team: team, year: year, month: month)
+            // 경기를 가져왔지만 내 팀 경기가 없는 경우
+            if games.isEmpty {
+                errorMessage = "이번 달은 경기 일정이 없습니다."
+            }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "경기 일정을 불러오지 못했습니다.\n\(error.localizedDescription)"
             games = []
         }
 
