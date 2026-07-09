@@ -14,25 +14,14 @@ enum Constants {
     static let selectedTeamIDKey = "selectedTeamID"
     static let selectedLeagueKey = "selectedLeague"
 
-    // MARK: - ESPN API
-    // ESPN 비공식 API 기본 URL
-    static let espnBaseURL = "https://site.api.espn.com/apis/site/v2/sports/baseball"
-
-    // 스코어보드 URL을 생성하는 함수
-    // - league: "mlb" 또는 "kbo"
-    // - date: "YYYYMMDD" 형식의 날짜 문자열
-    static func scoreboardURL(league: String, date: String) -> String {
-        "\(espnBaseURL)/\(league)/scoreboard?dates=\(date)"
-    }
-
-    // 팀 목록 URL
-    static func teamsURL(league: String) -> String {
-        "\(espnBaseURL)/\(league)/teams"
-    }
-
     // MARK: - Notification
     static let notificationEnabledKey = "notificationEnabled"
     static let notificationLeadTimeKey = "notificationLeadTime" // 분 단위 (30, 60, 120)
+    static let notificationCategoryGameStart = "gameStart"
+    static let notificationGameIdKey = "gameId"
+    static let notificationTeamIdKey = "teamId"
+    static let notificationDestinationKey = "destination"
+    static let notificationDestinationLiveCenter = "liveCenter"
 
     // MARK: - Cache
     // 캐시 만료 시간 (30분 = 1800초)

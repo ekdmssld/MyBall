@@ -33,7 +33,12 @@ final class NotificationService {
             ? "vs \(opponent.name) — 홈 경기가 곧 시작됩니다!"
             : "@ \(opponent.name) — 원정 경기가 곧 시작됩니다!"
         content.sound = .default
-        content.categoryIdentifier = "gameStart"
+        content.categoryIdentifier = Constants.notificationCategoryGameStart
+        content.userInfo = [
+            Constants.notificationDestinationKey: Constants.notificationDestinationLiveCenter,
+            Constants.notificationGameIdKey: game.id,
+            Constants.notificationTeamIdKey: myTeamId
+        ]
 
         // 알림 시간 계산 (경기 시간 - leadTime)
         let triggerDate = game.date.addingTimeInterval(-Double(leadTimeMinutes * 60))

@@ -5,17 +5,6 @@
 import Foundation
 
 extension Date {
-    // MARK: - ESPN API용 날짜 포맷
-
-    // ESPN API에 보낼 "YYYYMMDD" 형식 문자열
-    // 예: 2025-04-05 → "20250405"
-    var espnDateString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        formatter.timeZone = TimeZone(identifier: "America/New_York")
-        return formatter.string(from: self)
-    }
-
     // MARK: - 한국어 날짜 표시
 
     // "4월 5일 (토)" 형식

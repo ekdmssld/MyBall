@@ -1,5 +1,5 @@
 // APIDebugView.swift
-// ESPN API를 직접 테스트해볼 수 있는 디버그 화면
+// API와 기능을 직접 테스트해볼 수 있는 디버그 화면
 // #if DEBUG로 감싸서 릴리즈 빌드에서는 제외됨
 
 #if DEBUG
@@ -8,36 +8,21 @@ import UserNotifications
 
 struct APIDebugView: View {
     // @State: 이 화면의 로컬 상태 (Flutter의 setState와 비슷)
-    @State private var selectedLeague: League = .mlb
-    @State private var responseText: String = "API를 테스트해보세요"
+    @State private var responseText: String = "테스트할 기능을 선택하세요"
     @State private var isLoading = false
-    @State private var testDate = Date()
 
     var body: some View {
         NavigationStack {
             VStack(spacing: Theme.Spacing.large) {
-                // 리그 선택 (세그먼트 컨트롤)
-                Picker("리그", selection: $selectedLeague) {
-                    ForEach(League.allCases) { league in
-                        Text(league.displayName).tag(league)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-
-                // 날짜 선택
-                DatePicker("날짜", selection: $testDate, displayedComponents: .date)
-                    .padding(.horizontal)
-
-                // 테스트 버튼들
+                // KBO API 테스트
                 HStack(spacing: Theme.Spacing.medium) {
-                    Button("스코어보드 조회") {
-                        Task { await fetchScoreboard() }
+                    Button("이번 달 일정 조회") {
+                        Task { await fetchSchedule() }
                     }
                     .buttonStyle(.borderedProminent)
 
-                    Button("팀 목록 조회") {
-                        Task { await fetchTeams() }
+                    Button("순위표 조회") {
+                        Task { await fetchStandings() }
                     }
                     .buttonStyle(.bordered)
                 }
@@ -85,46 +70,45 @@ struct APIDebugView: View {
 
                 Spacer()
             }
-            .navigationTitle("API 디버그")
+            .padding(.top, Theme.Spacing.large)
+            .navigationTitle("디버그")
         }
     }
 
-    // 스코어보드 API 테스트
-    private func fetchScoreboard() async {
+    // 이번 달 KBO 일정 테스트
+    private func fetchSchedule() async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let urlString = Constants.scoreboardURL(
-                league: selectedLeague.espnPath,
-                date: testDate.espnDateString
+            let calendar = Calendar.current
+            let now = Date()
+            let games = try await KBOAPIClient.shared.fetchMonthSchedule(
+                year: calendar.component(.year, from: now),
+                month: calendar.component(.month, from: now)
             )
-            let raw = try await APIClient.shared.fetchRawJSON(from: urlString)
-
-            // 파싱된 결과도 함께 표시
-            let games = try await APIClient.shared.fetchScoreboard(league: selectedLeague, date: testDate)
-            let summary = games.map { game in
-                "\(game.awayTeam.abbreviation) @ \(game.homeTeam.abbreviation) — \(game.status.displayText) \(game.scoreText ?? "")"
+            let summary = games.prefix(30).map { game in
+                "\(game.date.koreanDateString) \(game.awayTeam.name) @ \(game.homeTeam.name) — \(game.status.displayText) \(game.scoreText ?? "")"
             }.joined(separator: "\n")
 
-            responseText = "=== 파싱 결과 (\(games.count)경기) ===\n\(summary)\n\n=== Raw JSON ===\n\(raw)"
+            responseText = "=== 이번 달 KBO 일정 (\(games.count)경기) ===\n\(summary)"
         } catch {
             responseText = "에러: \(error.localizedDescription)"
         }
     }
 
-    // 팀 목록 API 테스트
-    private func fetchTeams() async {
+    // KBO 순위표 테스트
+    private func fetchStandings() async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let teams = try await APIClient.shared.fetchTeams(league: selectedLeague)
-            let summary = teams.map { team in
-                "ID: \(team.id ?? "?") | \(team.abbreviation ?? "?") | \(team.displayName ?? "?")"
+            let standings = try await KBOAPIClient.shared.fetchStandings()
+            let summary = standings.map { s in
+                "\(s.rank)위 \(s.teamName) — \(s.recordText) 승률 \(s.winRate) 게임차 \(s.gamesBehind)"
             }.joined(separator: "\n")
 
-            responseText = "=== \(selectedLeague.displayName) 팀 목록 (\(teams.count)팀) ===\n\(summary)"
+            responseText = "=== KBO 순위 ===\n\(summary)"
         } catch {
             responseText = "에러: \(error.localizedDescription)"
         }
@@ -143,7 +127,10 @@ struct APIDebugView: View {
         content.title = "경기 시작 30분 전"
         content.body = "vs LG — 홈 경기가 곧 시작됩니다! (테스트)"
         content.sound = .default
-        content.categoryIdentifier = "gameStart"  // 이 카테고리가 딥링크 트리거
+        content.categoryIdentifier = Constants.notificationCategoryGameStart  // 이 카테고리가 딥링크 트리거
+        content.userInfo = [
+            Constants.notificationDestinationKey: Constants.notificationDestinationLiveCenter
+        ]
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
         let request = UNNotificationRequest(identifier: "debug-test", content: content, trigger: trigger)

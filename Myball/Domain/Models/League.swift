@@ -1,5 +1,6 @@
 // League.swift
-// KBO / MLB 리그를 구분하는 enum
+// 리그 enum — 현재는 KBO만 지원
+// (과거에 저장된 데이터와의 호환을 위해 enum 형태 유지)
 
 import Foundation
 
@@ -8,7 +9,6 @@ import Foundation
 // Codable: JSON 변환 가능
 enum League: String, CaseIterable, Codable, Identifiable {
     case kbo = "kbo"
-    case mlb = "mlb"
 
     // Identifiable을 위한 id (SwiftUI List/ForEach에서 필요)
     var id: String { rawValue }
@@ -17,12 +17,6 @@ enum League: String, CaseIterable, Codable, Identifiable {
     var displayName: String {
         switch self {
         case .kbo: return "KBO"
-        case .mlb: return "MLB"
         }
-    }
-
-    // ESPN API 경로에 사용할 문자열
-    var espnPath: String {
-        rawValue
     }
 }

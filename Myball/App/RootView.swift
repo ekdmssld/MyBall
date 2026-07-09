@@ -36,7 +36,7 @@ struct RootView: View {
             // 딥링크 시트 배선 검증용: 알림 탭과 동일한 신호를 직접 발생
             if ProcessInfo.processInfo.arguments.contains("-openLiveCenter") {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
-                NotificationDelegate.shared.openLiveCenter = true
+                NotificationDelegate.shared.requestLiveCenter(teamId: selectedTeamID)
             }
             // 알림 딥링크 자동화 테스트용: 5초 후 테스트 알림 발송
             if ProcessInfo.processInfo.arguments.contains("-fireTestNotification") {
@@ -45,7 +45,11 @@ struct RootView: View {
                 let content = UNMutableNotificationContent()
                 content.title = "경기 시작 30분 전"
                 content.body = "vs LG — 홈 경기가 곧 시작됩니다! (테스트)"
-                content.categoryIdentifier = "gameStart"
+                content.categoryIdentifier = Constants.notificationCategoryGameStart
+                content.userInfo = [
+                    Constants.notificationDestinationKey: Constants.notificationDestinationLiveCenter,
+                    Constants.notificationTeamIdKey: selectedTeamID ?? ""
+                ]
                 let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
                 let request = UNNotificationRequest(identifier: "uitest-noti", content: content, trigger: trigger)
                 try? await UNUserNotificationCenter.current().add(request)
@@ -58,9 +62,14 @@ struct RootView: View {
     private func mainTabView(team: Team) -> some View {
         tabView(team: team)
             // 경기 알림을 탭하면 라이브 경기 센터를 시트로 표시
-            .sheet(isPresented: $notificationDelegate.openLiveCenter) {
+            .sheet(
+                item: $notificationDelegate.liveCenterRequest,
+                onDismiss: {
+                    notificationDelegate.clearLiveCenterRequest()
+                }
+            ) { request in
                 NavigationStack {
-                    LiveGameView(team: team)
+                    LiveGameView(team: Team.find(by: request.teamId ?? team.id) ?? team)
                 }
             }
     }

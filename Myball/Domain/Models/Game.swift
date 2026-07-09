@@ -12,25 +12,6 @@ enum GameStatus: String, Codable {
     case postponed   // 연기
     case canceled    // 취소
 
-    // ESPN API의 status.type.name 값으로부터 변환
-    init(espnStatusName: String) {
-        switch espnStatusName {
-        case "STATUS_SCHEDULED", "STATUS_WARMUP":
-            self = .scheduled
-        case "STATUS_IN_PROGRESS", "STATUS_RAIN_DELAY", "STATUS_DELAYED",
-             "STATUS_PLAY_SUSPENDED":
-            self = .inProgress
-        case "STATUS_FINAL":
-            self = .final_
-        case "STATUS_POSTPONED":
-            self = .postponed
-        case "STATUS_CANCELED":
-            self = .canceled
-        default:
-            self = .scheduled
-        }
-    }
-
     var displayText: String {
         switch self {
         case .scheduled: return "예정"

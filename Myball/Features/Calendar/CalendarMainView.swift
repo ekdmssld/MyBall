@@ -349,5 +349,5 @@ private struct GameListRow: View {
 }
 
 #Preview {
-    CalendarMainView(team: Team.mlbTeams[0])
+    CalendarMainView(team: Team.kboTeams[0])
 }

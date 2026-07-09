@@ -3,7 +3,6 @@
 // 캘린더 추가 / 배경화면 생성 기능 포함
 
 import SwiftUI
-import Kingfisher
 
 struct GameDetailView: View {
     let game: Game
@@ -119,25 +118,14 @@ struct GameDetailView: View {
         .frame(maxWidth: .infinity)
     }
 
-    // 팀 로고 이미지
+    // 팀 캐릭터 (팀 컬러 모자를 쓴 야구공)
     @ViewBuilder
     private func teamLogoView(_ gameTeam: GameTeam) -> some View {
-        if let logoURL = gameTeam.logoURL, let url = URL(string: logoURL) {
-            KFImage(url)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 64, height: 64)
+        if let team = Team.find(by: gameTeam.teamId) {
+            TeamCharacterView(team: team, size: 60)
         } else {
-            // 로고 없으면 약칭 표시
-            let team = Team.find(by: gameTeam.teamId)
-            Circle()
-                .fill(team?.color ?? Theme.Colors.primary)
-                .frame(width: 64, height: 64)
-                .overlay(
-                    Text(gameTeam.abbreviation.prefix(2))
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.white)
-                )
+            // 팀 정보를 못 찾으면 회색 모자 캐릭터
+            BaseballCharacterView(capColor: .gray, buttonColor: .white, size: 60)
         }
     }
 
@@ -268,22 +256,20 @@ struct GameDetailView: View {
                 id: "preview-1",
                 date: Date(),
                 homeTeam: GameTeam(
-                    teamId: "10", name: "New York Yankees",
-                    abbreviation: "NYY",
-                    logoURL: "https://a.espncdn.com/i/teamlogos/mlb/500/scoreboard/nyy.png",
+                    teamId: "kbo-samsung", name: "삼성 라이온즈",
+                    abbreviation: "SSL", logoURL: nil,
                     score: "5", isWinner: true
                 ),
                 awayTeam: GameTeam(
-                    teamId: "2", name: "Boston Red Sox",
-                    abbreviation: "BOS",
-                    logoURL: "https://a.espncdn.com/i/teamlogos/mlb/500/scoreboard/bos.png",
+                    teamId: "kbo-lg", name: "LG 트윈스",
+                    abbreviation: "LG", logoURL: nil,
                     score: "3", isWinner: false
                 ),
-                venue: "Yankee Stadium",
+                venue: "대구",
                 status: .final_,
-                league: .mlb
+                league: .kbo
             ),
-            myTeamId: "10"
+            myTeamId: "kbo-samsung"
         )
     }
 }

@@ -120,13 +120,13 @@ struct SettingsView: View {
             HStack {
                 Text("데이터 출처")
                 Spacer()
-                Text("ESPN")
+                Text("KBO · 네이버 스포츠")
                     .foregroundStyle(Theme.Colors.secondaryLabel)
             }
         } header: {
             Text("정보")
         } footer: {
-            Text("경기 데이터는 ESPN 비공식 API를 통해 제공됩니다. 실제 일정과 차이가 있을 수 있습니다.")
+            Text("경기 데이터는 KBO 공식 사이트와 네이버 스포츠의 비공식 API를 통해 제공됩니다. 실제 일정과 차이가 있을 수 있습니다.")
         }
     }
 }

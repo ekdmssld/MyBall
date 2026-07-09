@@ -248,12 +248,12 @@ struct WallpaperContent: View {
         game: Game(
             id: "preview-1",
             date: Date().addingTimeInterval(86400),
-            homeTeam: GameTeam(teamId: "10", name: "New York Yankees", abbreviation: "NYY", logoURL: nil, score: nil, isWinner: false),
-            awayTeam: GameTeam(teamId: "2", name: "Boston Red Sox", abbreviation: "BOS", logoURL: nil, score: nil, isWinner: false),
-            venue: "Yankee Stadium",
+            homeTeam: GameTeam(teamId: "kbo-samsung", name: "삼성 라이온즈", abbreviation: "SSL", logoURL: nil, score: nil, isWinner: false),
+            awayTeam: GameTeam(teamId: "kbo-lg", name: "LG 트윈스", abbreviation: "LG", logoURL: nil, score: nil, isWinner: false),
+            venue: "대구",
             status: .scheduled,
-            league: .mlb
+            league: .kbo
         ),
-        myTeamId: "10"
+        myTeamId: "kbo-samsung"
     )
 }
