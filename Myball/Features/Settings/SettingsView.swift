@@ -33,15 +33,8 @@ struct SettingsView: View {
         Section {
             if let team = viewModel.selectedTeam {
                 HStack(spacing: Theme.Spacing.medium) {
-                    // 팀 색상 원
-                    Circle()
-                        .fill(team.color)
-                        .frame(width: 36, height: 36)
-                        .overlay(
-                            Text(team.abbreviation.prefix(2))
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.white)
-                        )
+                    // 팀 캐릭터
+                    TeamCharacterView(team: team, size: 40)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(team.name)

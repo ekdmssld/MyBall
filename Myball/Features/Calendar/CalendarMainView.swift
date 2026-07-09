@@ -3,7 +3,6 @@
 // Flutter의 TableCalendar와 비슷한 역할
 
 import SwiftUI
-import Kingfisher
 
 struct CalendarMainView: View {
     @StateObject private var viewModel: CalendarViewModel
@@ -79,22 +78,7 @@ struct CalendarMainView: View {
 
     // MARK: - 팀 배지 (네비게이션 바 왼쪽)
     private var teamBadge: some View {
-        HStack(spacing: 6) {
-            if let logoURL = viewModel.team.logoURL, let url = URL(string: logoURL) {
-                KFImage(url)
-                    .resizable()
-                    .frame(width: 24, height: 24)
-            } else {
-                Circle()
-                    .fill(viewModel.team.color)
-                    .frame(width: 24, height: 24)
-                    .overlay(
-                        Text(viewModel.team.abbreviation.prefix(2))
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.white)
-                    )
-            }
-        }
+        TeamCharacterView(team: viewModel.team, size: 26)
     }
 
     // MARK: - 월 네비게이션

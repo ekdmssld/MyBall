@@ -3,7 +3,6 @@
 // Flutter의 StatefulWidget + GridView와 비슷
 
 import SwiftUI
-import Kingfisher
 
 struct TeamSelectionView: View {
     // @StateObject: ViewModel 생성 및 소유 (이 뷰가 사라지면 ViewModel도 해제)
@@ -21,9 +20,6 @@ struct TeamSelectionView: View {
         VStack(spacing: 0) {
             // 상단 헤더
             headerSection
-
-            // 리그 선택 세그먼트
-            leaguePicker
 
             // 검색바
             searchBar
@@ -50,18 +46,6 @@ struct TeamSelectionView: View {
                 .foregroundStyle(Theme.Colors.secondaryLabel)
         }
         .padding(.bottom, Theme.Spacing.large)
-    }
-
-    // MARK: - 리그 선택
-    private var leaguePicker: some View {
-        Picker("리그", selection: $viewModel.selectedLeague) {
-            ForEach(League.allCases) { league in
-                Text(league.displayName).tag(league)
-            }
-        }
-        .pickerStyle(.segmented)
-        .padding(.horizontal, Theme.Spacing.large)
-        .padding(.bottom, Theme.Spacing.medium)
     }
 
     // MARK: - 검색바
@@ -124,34 +108,9 @@ private struct TeamCard: View {
         }
     }
 
-    // 로고가 있으면 Kingfisher로 로드, 없으면 이니셜 원형 표시
-    @ViewBuilder
+    // 팀 컬러 모자를 쓴 귀여운 야구공 캐릭터
     private var teamLogo: some View {
-        if let logoURL = team.logoURL, let url = URL(string: logoURL) {
-            // Kingfisher: 이미지 다운로드 + 캐싱 라이브러리
-            // Flutter의 cached_network_image와 비슷
-            KFImage(url)
-                .placeholder {
-                    teamInitial
-                }
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 48, height: 48)
-        } else {
-            teamInitial
-        }
-    }
-
-    // 로고 없을 때 보여줄 이니셜 뷰 (KBO 팀용)
-    private var teamInitial: some View {
-        Circle()
-            .fill(team.color)
-            .frame(width: 48, height: 48)
-            .overlay(
-                Text(team.abbreviation.prefix(2))
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-            )
+        TeamCharacterView(team: team, size: 52)
     }
 }
 
