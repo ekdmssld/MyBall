@@ -66,6 +66,15 @@ struct HomeView: View {
                 // 2. 이번 달 성적
                 MonthRecordSection(record: summary.monthRecord)
 
+                // 2.5. 리그 순위 (KBO)
+                if !viewModel.standings.isEmpty {
+                    StandingsSection(
+                        standings: viewModel.standings,
+                        myTeamId: viewModel.team.id,
+                        myTeamColor: viewModel.team.color
+                    )
+                }
+
                 // 3. 최근 5경기
                 RecentGamesSection(
                     games: summary.recentGames,
@@ -281,6 +290,90 @@ private struct MonthRecordSection: View {
                 .foregroundStyle(Theme.Colors.secondaryLabel)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - 리그 순위 섹션
+private struct StandingsSection: View {
+    let standings: [TeamStanding]
+    let myTeamId: String
+    let myTeamColor: Color
+
+    // 내 팀의 순위 정보
+    private var myStanding: TeamStanding? {
+        standings.first { $0.teamId == myTeamId }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
+            Text("리그 순위")
+                .font(Theme.Fonts.headline)
+
+            // 내 팀 요약 (크게)
+            if let mine = myStanding {
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.medium) {
+                    Text("\(mine.rank)위")
+                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .foregroundStyle(myTeamColor)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(mine.recordText + " · 승률 \(mine.winRate)")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text(mine.gamesBehind == "-"
+                             ? "리그 1위! · 최근 \(mine.streak)"
+                             : "1위와 \(mine.gamesBehind)경기차 · 최근 \(mine.streak)")
+                            .font(Theme.Fonts.caption)
+                            .foregroundStyle(Theme.Colors.secondaryLabel)
+                    }
+
+                    Spacer()
+                }
+                .padding(.bottom, Theme.Spacing.small)
+            }
+
+            // 전체 순위표 (컴팩트)
+            VStack(spacing: 0) {
+                ForEach(standings) { standing in
+                    standingRow(standing)
+                }
+            }
+        }
+        .padding(Theme.Spacing.large)
+        .background(Theme.Colors.secondaryBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.large))
+    }
+
+    private func standingRow(_ standing: TeamStanding) -> some View {
+        let isMine = standing.teamId == myTeamId
+
+        return HStack(spacing: Theme.Spacing.medium) {
+            Text("\(standing.rank)")
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(isMine ? myTeamColor : Theme.Colors.secondaryLabel)
+                .frame(width: 18, alignment: .center)
+
+            Text(standing.teamName)
+                .font(.system(size: 13, weight: isMine ? .bold : .regular))
+
+            Spacer()
+
+            Text(standing.recordText)
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.Colors.secondaryLabel)
+
+            Text(standing.winRate)
+                .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                .frame(width: 44, alignment: .trailing)
+
+            Text(standing.gamesBehind)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(Theme.Colors.secondaryLabel)
+                .frame(width: 32, alignment: .trailing)
+        }
+        .padding(.vertical, 5)
+        .padding(.horizontal, Theme.Spacing.small)
+        .background(isMine ? myTeamColor.opacity(0.1) : Color.clear)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.small))
     }
 }
 

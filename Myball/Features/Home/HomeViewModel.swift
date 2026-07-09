@@ -14,6 +14,7 @@ final class HomeViewModel: ObservableObject {
     // 데이터 로드가 영영 시작되지 않는 버그가 생김
     @Published var isLoading = true
     @Published var errorMessage: String? = nil
+    @Published var standings: [TeamStanding] = []   // KBO 전체 순위
 
     // MARK: - 의존성
     let team: Team
@@ -39,6 +40,11 @@ final class HomeViewModel: ObservableObject {
             // 별도 Task로 실행해서 홈 화면 표시를 늦추지 않음
             Task {
                 await LiveActivityService.shared.autoSync(team: team)
+            }
+
+            // 순위표 로드 (실패해도 홈 화면은 정상 표시)
+            if team.league == .kbo {
+                standings = (try? await KBOAPIClient.shared.fetchStandings()) ?? standings
             }
         } catch {
             // 기존 데이터가 있으면 유지하고, 없을 때만 에러 화면 표시

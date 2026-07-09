@@ -58,6 +58,27 @@ struct NaverAPIClientTests {
         print("[통합테스트] 현재 진행 중인 경기 없음 — 상세 검증 생략")
     }
 
+    @Test("KBO 순위표 조회 및 파싱")
+    func fetchStandings() async throws {
+        let standings = try await KBOAPIClient.shared.fetchStandings()
+
+        // 시즌 중에는 10개 팀이 모두 있어야 함
+        #expect(standings.count == 10)
+
+        // 1위 팀 검증
+        if let first = standings.first {
+            #expect(first.rank == 1)
+            #expect(first.wins > 0)
+            #expect(first.gamesBehind == "-")  // 1위는 게임차 없음
+            print("[통합테스트] 1위: \(first.teamName) \(first.recordText) 승률 \(first.winRate)")
+        }
+
+        // 모든 팀이 우리 앱 팀 ID로 매핑되는지 확인
+        for standing in standings {
+            #expect(standing.teamId.hasPrefix("kbo-"), "\(standing.teamName)이 팀 ID로 매핑되어야 함")
+        }
+    }
+
     @Test("경기 전 선발투수 조회")
     func fetchStarters() async throws {
         let client = NaverAPIClient.shared

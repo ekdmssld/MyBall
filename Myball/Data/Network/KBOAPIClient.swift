@@ -67,6 +67,68 @@ final class KBOAPIClient {
         return parseScheduleResponse(data: data, year: year)
     }
 
+    // MARK: - 팀 순위 조회
+    // KBO 공식 사이트 메인의 순위표 API
+    func fetchStandings() async throws -> [TeamStanding] {
+        guard let url = URL(string: "https://www.koreabaseball.com/ws/Main.asmx/GetTeamRank") else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("https://www.koreabaseball.com/", forHTTPHeaderField: "Referer")
+        request.httpBody = "{}".data(using: .utf8)
+
+        let (data, response) = try await session.data(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse,
+           !(200...299).contains(httpResponse.statusCode) {
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+
+        // 주의: 이 API는 JSON 뒤에 HTML이 붙어서 옴 → JSON 부분만 잘라냄
+        var jsonData = data
+        if let text = String(data: data, encoding: .utf8),
+           let htmlStart = text.range(of: "<!DOCTYPE") {
+            let jsonText = String(text[..<htmlStart.lowerBound])
+            jsonData = jsonText.data(using: .utf8) ?? data
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+              let rows = json["rows"] as? [[String: Any]] else {
+            return []
+        }
+
+        var standings: [TeamStanding] = []
+
+        for rowData in rows {
+            guard let cells = rowData["row"] as? [[String: Any]], cells.count >= 8 else { continue }
+
+            // 셀 순서: [순위, 팀명, 경기, 승, 패, 무, 승률, 게임차, 연속]
+            func text(_ index: Int) -> String {
+                stripHTML(cells[index]["Text"] as? String ?? "")
+            }
+
+            let teamName = text(1)
+
+            standings.append(TeamStanding(
+                rank: Int(text(0)) ?? 0,
+                teamId: Self.teamNameToId[teamName] ?? teamName,
+                teamName: teamName,
+                games: Int(text(2)) ?? 0,
+                wins: Int(text(3)) ?? 0,
+                losses: Int(text(4)) ?? 0,
+                draws: Int(text(5)) ?? 0,
+                winRate: text(6),
+                gamesBehind: text(7),
+                streak: cells.count >= 9 ? text(8) : ""
+            ))
+        }
+
+        return standings
+    }
+
     // MARK: - JSON 파싱
     // KBO API 응답 → Game 배열로 변환
     private func parseScheduleResponse(data: Data, year: Int) -> [Game] {
