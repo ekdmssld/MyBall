@@ -27,6 +27,12 @@ struct RootView: View {
     // MARK: - 메인 탭 화면
     private func mainTabView(team: Team) -> some View {
         TabView {
+            // 홈 탭 — 다음 경기, 성적, 최근 결과 요약
+            HomeView(team: team)
+                .tabItem {
+                    Label("홈", systemImage: "house")
+                }
+
             // 캘린더 탭
             CalendarMainView(team: team)
                 .tabItem {

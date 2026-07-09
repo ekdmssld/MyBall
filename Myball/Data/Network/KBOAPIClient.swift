@@ -120,11 +120,13 @@ final class KBOAPIClient {
             }
 
             // 경기 상태 결정
+            // 주의: KBO 사이트는 진행 중인 경기에도 현재 스코어를 보여줌
+            // → 스코어가 있어도 시작 후 5시간이 지나지 않았으면 "진행 중"으로 간주
+            //   (그렇지 않으면 진행 중인 0-0 경기가 무승부로 잘못 집계됨)
             let status: GameStatus
             if gameInfo.awayScore != nil {
-                status = .final_
-            } else if gameDate > Date() {
-                status = .scheduled
+                let assumedEndTime = gameDate.addingTimeInterval(5 * 3600)
+                status = Date() < assumedEndTime ? .inProgress : .final_
             } else {
                 status = .scheduled
             }

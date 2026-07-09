@@ -57,6 +57,8 @@ MyBall/
 │       └── ScheduleCache.swift       # 인메모리 + SwiftData 캐시
 ├── Features/               # 화면별 모듈 (각각 View + ViewModel)
 │   ├── TeamSelection/      # 팀 선택 화면 (그리드)
+│   ├── Home/               # 홈 대시보드 (다음 경기 카드, 월간 성적, 최근/주간 경기)
+│   ├── Live/               # 라이브 경기 센터 (실시간 루상 주자, 볼카운트, 선발투수 — KBO만)
 │   ├── Calendar/           # 캘린더 메인 화면 (월별 그리드)
 │   ├── GameDetail/         # 경기 상세 + 캘린더 추가 + 배경화면 이동
 │   ├── Settings/           # 설정 (팀 변경, 알림, 캐시)
@@ -69,10 +71,21 @@ MyBall/
 ```
 
 ## API
-ESPN 비공식 API (인증 불필요):
+ESPN 비공식 API (인증 불필요, MLB용):
 - 스코어보드: `https://site.api.espn.com/apis/site/v2/sports/baseball/{kbo|mlb}/scoreboard?dates=YYYYMMDD`
 - 팀 목록: `https://site.api.espn.com/apis/site/v2/sports/baseball/{kbo|mlb}/teams`
-- 비공식 API이므로 언제든 변경/중단될 수 있음 → 에러 핸들링과 캐시 필수
+
+KBO 공식 사이트 API (일정/결과용, KBOAPIClient):
+- `https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList` (POST, 월별 일정)
+- 주의: 진행 중 경기에도 현재 스코어를 반환함 → 시작 후 5시간 기준으로 진행 중/종료 판별
+
+네이버 스포츠 API (실시간 라이브용, NaverAPIClient):
+- 경기 목록: `https://api-gw.sports.naver.com/schedule/games?...&categoryId=kbo&fromDate=...`
+- 문자중계(루상 주자/볼카운트/현재 투수·타자): `.../schedule/games/{gameId}/relay`
+- 미리보기(선발투수/라인업): `.../schedule/games/{gameId}/preview`
+- gameId 형식: `YYYYMMDD{원정코드}{홈코드}0{시즌}` / 팀 코드: SS 삼성, OB 두산, SK SSG, WO 키움, HT KIA, LT 롯데, HH 한화 등
+
+모두 비공식 API이므로 언제든 변경/중단될 수 있음 → 에러 핸들링과 캐시 필수
 
 ## App Group
 - ID: `group.com.myball.shared`

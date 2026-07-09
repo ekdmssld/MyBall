@@ -158,7 +158,13 @@ enum WidgetAPIClient {
             // 날짜 파싱
             guard let gameDate = parseKBODate(dateStr: currentDateStr, timeStr: timeStr, year: year) else { continue }
 
-            let statusName = parsed.awayScore != nil ? "STATUS_FINAL" : "STATUS_SCHEDULED"
+            // 스코어가 있어도 시작 후 5시간 이내면 진행 중 (KBO 사이트는 진행 중에도 스코어 표시)
+            let statusName: String
+            if parsed.awayScore != nil {
+                statusName = Date() < gameDate.addingTimeInterval(5 * 3600) ? "STATUS_IN_PROGRESS" : "STATUS_FINAL"
+            } else {
+                statusName = "STATUS_SCHEDULED"
+            }
 
             let game = WidgetGame(
                 id: gameId,

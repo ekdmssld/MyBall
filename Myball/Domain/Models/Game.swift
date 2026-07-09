@@ -94,4 +94,38 @@ struct Game: Identifiable, Codable, Equatable {
               let awayScore = awayTeam.score else { return nil }
         return "\(awayScore) - \(homeScore)"
     }
+
+    // MARK: - 승패 판정
+
+    // 내 팀 기준 경기 결과 (승/패/무)
+    // 경기가 끝나지 않았거나 스코어가 없으면 nil 반환
+    // 옵셔널 반환 = Flutter에서 nullable 타입(GameResult?)을 반환하는 것과 같음
+    func result(myTeamId: String) -> GameResult? {
+        guard status == .final_,
+              let myScoreText = myTeam(myTeamId: myTeamId).score,
+              let oppScoreText = opponent(myTeamId: myTeamId).score,
+              let myScore = Int(myScoreText),
+              let oppScore = Int(oppScoreText) else {
+            return nil
+        }
+
+        if myScore > oppScore { return .win }
+        if myScore < oppScore { return .loss }
+        return .draw  // KBO는 무승부가 존재함
+    }
+}
+
+// MARK: - 경기 결과 (내 팀 기준)
+enum GameResult {
+    case win   // 승
+    case loss  // 패
+    case draw  // 무승부
+
+    var displayText: String {
+        switch self {
+        case .win: return "승"
+        case .loss: return "패"
+        case .draw: return "무"
+        }
+    }
 }
