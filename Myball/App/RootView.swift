@@ -22,6 +22,15 @@ struct RootView: View {
         }
         // 팀 변경 시 애니메이션
         .animation(.easeInOut(duration: 0.3), value: selectedTeamID)
+        #if DEBUG
+        // 실행 인자로 더미 Live Activity 시작 (자동화 테스트용)
+        // 예: xcrun simctl launch <기기> TB.Myball -liveActivityDummy
+        .task {
+            if ProcessInfo.processInfo.arguments.contains("-liveActivityDummy") {
+                await LiveActivityService.shared.startDummy()
+            }
+        }
+        #endif
     }
 
     // MARK: - 메인 탭 화면

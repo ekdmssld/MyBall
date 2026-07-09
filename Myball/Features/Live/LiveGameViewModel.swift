@@ -74,8 +74,15 @@ final class LiveGameViewModel: ObservableObject {
                 // 진행 중: 실시간 상세 (루상 주자, 볼카운트)
                 detail = try await client.fetchLiveDetail(gameId: info.gameId)
                 phase = .live
+
+                // 잠금화면 Live Activity도 함께 시작/업데이트
+                if let detail = detail {
+                    await LiveActivityService.shared.startOrUpdate(info: info, detail: detail, team: team)
+                }
             } else {
                 phase = .finished
+                // 경기가 끝나면 Live Activity에 최종 스코어 표시 후 종료
+                await LiveActivityService.shared.end(info: info)
             }
 
             lastUpdated = Date()

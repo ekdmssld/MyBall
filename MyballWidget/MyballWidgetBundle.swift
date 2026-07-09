@@ -8,5 +8,6 @@ import SwiftUI
 struct MyballWidgetBundle: WidgetBundle {
     var body: some Widget {
         MyballWidget()
+        MyballWidgetLiveActivity()  // 잠금화면 실시간 경기 현황
     }
 }

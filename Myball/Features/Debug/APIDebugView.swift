@@ -41,6 +41,26 @@ struct APIDebugView: View {
                     .buttonStyle(.bordered)
                 }
 
+                // Live Activity 테스트 (더미 데이터로 잠금화면 UI 확인)
+                HStack(spacing: Theme.Spacing.medium) {
+                    Button("라이브 액티비티 시작") {
+                        Task {
+                            await LiveActivityService.shared.startDummy()
+                            responseText = "더미 Live Activity를 시작했습니다.\n홈 화면으로 나가거나 폰을 잠그면\n잠금화면/Dynamic Island에서 확인할 수 있습니다."
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+
+                    Button("종료") {
+                        Task {
+                            await LiveActivityService.shared.endDummy()
+                            responseText = "더미 Live Activity를 종료했습니다."
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                }
+
                 // 결과 표시
                 if isLoading {
                     ProgressView("로딩 중...")

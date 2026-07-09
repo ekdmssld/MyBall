@@ -11,6 +11,8 @@ MyBall은 사용자가 응원하는 야구팀을 설정하면, 해당 팀의 시
 - 홈화면 위젯 (WidgetKit - Small/Medium/Large)
 - 커스텀 배경화면 생성 및 저장
 - 경기 시작 전 푸시 알림
+- 라이브 경기 센터 (실시간 루상 주자, 볼카운트, 선발투수 — KBO)
+- 잠금화면 Live Activity + Dynamic Island (앱을 열면 자동 시작, 진행 중 경기 현황 표시)
 
 ## 기술 스택
 - 언어: Swift 5.9+
@@ -64,8 +66,11 @@ MyBall/
 │   ├── Settings/           # 설정 (팀 변경, 알림, 캐시)
 │   ├── Wallpaper/          # 배경화면 생성 (3가지 스타일) + 사진 저장
 │   └── Debug/              # API 디버그 화면 (#if DEBUG)
+├── Shared/                 # 앱 + 위젯 익스텐션 양쪽 타겟에 포함되는 파일
+│   └── GameActivityAttributes.swift  # Live Activity 데이터 정의 (pbxproj exception set으로 공유)
 ├── Widget/                 # WidgetKit Extension (별도 타겟)
-│   └── MyBallWidget.swift  # TimelineProvider + Small/Medium/Large
+│   ├── MyBallWidget.swift  # TimelineProvider + Small/Medium/Large
+│   └── MyballWidgetLiveActivity.swift  # 잠금화면 + Dynamic Island 실시간 경기 UI
 └── Resources/
     └── Assets.xcassets
 ```

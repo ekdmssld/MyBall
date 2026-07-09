@@ -34,6 +34,12 @@ final class HomeViewModel: ObservableObject {
 
         do {
             summary = try await useCase.execute(team: team)
+
+            // 앱을 열었을 때 진행 중인 경기가 있으면 잠금화면 Live Activity 자동 시작
+            // 별도 Task로 실행해서 홈 화면 표시를 늦추지 않음
+            Task {
+                await LiveActivityService.shared.autoSync(team: team)
+            }
         } catch {
             // 기존 데이터가 있으면 유지하고, 없을 때만 에러 화면 표시
             if summary == nil {
