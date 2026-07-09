@@ -88,11 +88,13 @@ struct WallpaperGeneratorView: View {
     // MARK: - 사진첩 저장
     private func saveWallpaper() {
         // ImageRenderer: SwiftUI 뷰를 이미지로 변환 (iOS 16+)
+        // 미리보기와 같은 비율(390pt)로 그리고 scale 3배 → 1170px 고해상도
+        // (큰 프레임에 직접 그리면 폰트가 상대적으로 작아지는 문제가 있음)
         let renderer = ImageRenderer(
             content: WallpaperContent(game: game, myTeamId: myTeamId, style: selectedStyle)
-                .frame(width: 1170, height: 2532) // iPhone 15 Pro 해상도
+                .frame(width: 390, height: 844)
         )
-        renderer.scale = 1.0 // 이미 고해상도 프레임 지정
+        renderer.scale = 3.0
 
         guard let uiImage = renderer.uiImage else {
             saveMessage = "이미지 생성에 실패했습니다."
@@ -119,30 +121,39 @@ struct WallpaperContent: View {
     }
 
     var body: some View {
-        ZStack {
-            // 배경 그라데이션
-            background
+        // GeometryReader: 부모가 주는 크기를 읽어서 내부 요소 크기를 비율로 계산
+        GeometryReader { geo in
+            ZStack {
+                // 배경 그라데이션
+                background
 
-            // 경기 정보 오버레이
-            VStack(spacing: 20) {
-                Spacer()
-                Spacer()
+                // 경기 정보 오버레이
+                VStack(spacing: 20) {
+                    Spacer()
+                    Spacer()
 
-                // 팀 이름
-                Text(team?.name ?? "")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(textColor)
+                    // 팀 캐릭터 (화면 폭의 1/3 크기)
+                    if let team = team {
+                        TeamCharacterView(team: team, size: geo.size.width * 0.32)
+                    }
 
-                Spacer()
+                    // 팀 이름
+                    Text(team?.name ?? "")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(textColor)
 
-                // 경기 정보 카드
-                gameInfoCard
+                    Spacer()
 
-                Spacer()
-                Spacer()
-                Spacer()
+                    // 경기 정보 카드
+                    gameInfoCard
+
+                    Spacer()
+                    Spacer()
+                    Spacer()
+                }
+                .padding(30)
+                .frame(width: geo.size.width, height: geo.size.height)
             }
-            .padding(30)
         }
     }
 

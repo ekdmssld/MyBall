@@ -178,10 +178,19 @@ private struct LockScreenView: View {
     }
 
     private func teamColumn(name: String, highlight: Bool) -> some View {
-        // 내 팀은 굵은 흰색, 상대팀은 반투명 흰색으로 구분
-        Text(name)
-            .font(.system(size: 15, weight: highlight ? .heavy : .semibold))
-            .foregroundStyle(highlight ? .white : .white.opacity(0.65))
+        // 내 팀은 캐릭터 + 굵은 흰색, 상대팀은 반투명 흰색으로 구분
+        HStack(spacing: 5) {
+            if highlight {
+                BaseballCharacterView(
+                    capColor: Color(hex: context.attributes.myTeamColorHex),
+                    buttonColor: .white,
+                    size: 24
+                )
+            }
+            Text(name)
+                .font(.system(size: 15, weight: highlight ? .heavy : .semibold))
+                .foregroundStyle(highlight ? .white : .white.opacity(0.65))
+        }
     }
 }
 

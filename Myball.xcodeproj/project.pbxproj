@@ -78,6 +78,7 @@
 		1B1112C92F71DDAA00050DB0 /* Exceptions for "Myball" folder in "MyballWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Shared/BaseballCharacterView.swift,
 				Shared/GameActivityAttributes.swift,
 			);
 			target = 1B1112892F712D9600050DB0 /* MyballWidgetExtension */;

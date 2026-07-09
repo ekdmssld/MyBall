@@ -142,11 +142,9 @@ struct SmallWidgetView: View {
     var body: some View {
         if let team = entry.team {
             VStack(alignment: .leading, spacing: 6) {
-                // 팀 이름
+                // 팀 캐릭터 + 이름
                 HStack(spacing: 4) {
-                    Circle()
-                        .fill(team.color)
-                        .frame(width: 14, height: 14)
+                    BaseballCharacterView(capColor: team.color, buttonColor: team.altColor, size: 18)
                     Text(team.shortName)
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(.primary)
@@ -230,11 +228,9 @@ struct MediumWidgetView: View {
 
     private func nextGameSection(team: WidgetTeam) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            // 팀 헤더
+            // 팀 캐릭터 + 이름
             HStack(spacing: 4) {
-                Circle()
-                    .fill(team.color)
-                    .frame(width: 12, height: 12)
+                BaseballCharacterView(capColor: team.color, buttonColor: team.altColor, size: 16)
                 Text(team.shortName)
                     .font(.system(size: 12, weight: .bold))
             }
@@ -383,9 +379,7 @@ struct LargeWidgetView: View {
 
     private func teamHeader(team: WidgetTeam) -> some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(team.color)
-                .frame(width: 16, height: 16)
+            BaseballCharacterView(capColor: team.color, buttonColor: team.altColor, size: 22)
             Text(team.shortName)
                 .font(.system(size: 15, weight: .bold))
             Spacer()
