@@ -3,10 +3,16 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 // @main: 앱의 시작점 (Flutter의 void main() => runApp())
 @main
 struct MyballApp: App {
+    init() {
+        // 알림 탭 이벤트를 받기 위해 델리게이트 등록
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+    }
+
     // SwiftData 모델 컨테이너 (로컬 DB)
     // Phase 3에서는 아직 SwiftData 모델이 없으므로 빈 스키마 사용
     var sharedModelContainer: ModelContainer = {
