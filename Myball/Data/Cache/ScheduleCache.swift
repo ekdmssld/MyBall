@@ -25,7 +25,7 @@ final class ScheduleCache: @unchecked Sendable {
     // (Flutter에서는 Dart가 싱글 스레드라 필요 없지만, Swift는 멀티 스레드)
     private let lock = NSLock()
 
-    // 캐시 저장소 — 키: "mlb-20250405", 값: CacheEntry
+    // 캐시 저장소 — 키: "kbo-202607", 값: CacheEntry
     private var cache: [String: CacheEntry] = [:]
 
     private init() {}

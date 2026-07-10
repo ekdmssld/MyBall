@@ -1,26 +1,9 @@
 // WidgetAPIClient.swift
-// 위젯 전용 API 클라이언트
-// MLB: ESPN API / KBO: 공식 사이트 API 사용
+// 위젯 전용 API 클라이언트 — KBO 공식 사이트 API 사용
 
 import Foundation
 
 enum WidgetAPIClient {
-    // MARK: - ESPN (MLB)
-    static func fetchESPNGames(date: Date) async -> [WidgetGame] {
-        let dateString = date.widgetEspnDateString
-        let urlString = WidgetConstants.scoreboardURL(league: "mlb", date: dateString)
-
-        guard let url = URL(string: urlString) else { return [] }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let response = try JSONDecoder().decode(WidgetESPNResponse.self, from: data)
-            return response.events?.compactMap { $0.toWidgetGame() } ?? []
-        } catch {
-            return []
-        }
-    }
-
     // MARK: - KBO 공식 사이트 API
     static func fetchKBOGames(year: Int, month: Int) async -> [WidgetGame] {
         let urlString = "https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList"
@@ -48,40 +31,20 @@ enum WidgetAPIClient {
     static func fetchUpcomingGames(team: WidgetTeam, days: Int = 7) async -> [WidgetGame] {
         var allGames: [WidgetGame] = []
 
-        switch team.league {
-        case .kbo:
-            // KBO: 이번 달 + 다음 달 한 번에 조회 (2회 호출)
-            let calendar = Calendar.current
-            let now = Date()
-            let year = calendar.component(.year, from: now)
-            let month = calendar.component(.month, from: now)
+        // 이번 달 + 다음 달 한 번에 조회 (2회 호출)
+        // 월말에는 다음 달 경기가 필요할 수 있음
+        let calendar = Calendar.current
+        let now = Date()
+        let year = calendar.component(.year, from: now)
+        let month = calendar.component(.month, from: now)
 
-            let thisMonthGames = await fetchKBOGames(year: year, month: month)
-            allGames.append(contentsOf: thisMonthGames)
+        let thisMonthGames = await fetchKBOGames(year: year, month: month)
+        allGames.append(contentsOf: thisMonthGames)
 
-            // 다음 달도 조회 (월말에 다음 달 경기가 필요할 수 있음)
-            let nextMonth = month == 12 ? 1 : month + 1
-            let nextYear = month == 12 ? year + 1 : year
-            let nextMonthGames = await fetchKBOGames(year: nextYear, month: nextMonth)
-            allGames.append(contentsOf: nextMonthGames)
-
-        case .mlb:
-            // MLB: 날짜별 병렬 조회
-            let calendar = Calendar.current
-            await withTaskGroup(of: [WidgetGame].self) { group in
-                for dayOffset in 0..<days {
-                    guard let date = calendar.date(byAdding: .day, value: dayOffset, to: Date()) else {
-                        continue
-                    }
-                    group.addTask {
-                        await fetchESPNGames(date: date)
-                    }
-                }
-                for await games in group {
-                    allGames.append(contentsOf: games)
-                }
-            }
-        }
+        let nextMonth = month == 12 ? 1 : month + 1
+        let nextYear = month == 12 ? year + 1 : year
+        let nextMonthGames = await fetchKBOGames(year: nextYear, month: nextMonth)
+        allGames.append(contentsOf: nextMonthGames)
 
         // 내 팀 경기만 필터링
         let myGames = allGames.filter { game in

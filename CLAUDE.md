@@ -4,7 +4,7 @@
 MyBall은 사용자가 응원하는 야구팀을 설정하면, 해당 팀의 시즌 경기 일정을 자동으로 불러와 캘린더 형태로 보여주는 iOS 앱입니다.
 
 ## 핵심 기능
-- 마이팀 설정 (KBO 10개 팀 / MLB 30개 팀)
+- 마이팀 설정 (KBO 10개 팀)
 - 경기 일정 캘린더 뷰 (월별)
 - 경기 상세 정보 (시간, 장소, 상대팀)
 - iOS 캘린더 연동 (EventKit)
@@ -22,7 +22,6 @@ MyBall은 사용자가 응원하는 야구팀을 설정하면, 해당 팀의 시
 - 비동기: Swift Concurrency (async/await)
 - 로컬 저장: SwiftData + UserDefaults (App Group 공유)
 - 네트워크: URLSession
-- 이미지 캐시: Kingfisher
 - 위젯: WidgetKit
 - 캘린더: EventKit
 - 알림: UserNotifications
@@ -37,10 +36,10 @@ MyBall/
 │   ├── Constants.swift     # App Group ID, API URL, 키 상수
 │   ├── Theme.swift         # 색상, 폰트, 간격 디자인 토큰
 │   └── Extensions/
-│       └── Date+Extensions.swift  # ESPN 날짜 포맷, 한국어 날짜
+│       └── Date+Extensions.swift  # 한국어 날짜 포맷
 ├── Domain/                 # 비즈니스 로직 (순수 Swift, UI 의존 없음)
 │   ├── Models/
-│   │   ├── League.swift    # KBO/MLB enum
+│   │   ├── League.swift    # 리그 enum (KBO 전용)
 │   │   ├── Team.swift      # 팀 모델 + KBO 10개 팀 데이터 + Color 헬퍼
 │   │   └── Game.swift      # 경기 모델, GameTeam, GameStatus
 │   ├── Protocols/
@@ -49,9 +48,9 @@ MyBall/
 │       └── FetchScheduleUseCase.swift  # 월별 내 팀 경기 필터링
 ├── Data/                   # 외부 데이터 소스
 │   ├── Network/
-│   │   ├── APIClient.swift     # URLSession ESPN API 호출 (싱글톤)
-│   │   └── DTOs/
-│   │       └── ESPNDTOs.swift  # ESPN JSON → Domain 모델 매핑
+│   │   ├── APIError.swift      # 공용 네트워크 에러 타입
+│   │   ├── KBOAPIClient.swift  # KBO 공식 사이트 API (일정/순위)
+│   │   └── NaverAPIClient.swift # 네이버 스포츠 API (실시간 라이브)
 │   ├── Repository/
 │   │   ├── ScheduleRepository.swift  # 캐시 + API 호출 조합
 │   │   └── TeamRepository.swift      # UserDefaults (App Group) 저장
@@ -76,12 +75,9 @@ MyBall/
 ```
 
 ## API
-ESPN 비공식 API (인증 불필요, MLB용):
-- 스코어보드: `https://site.api.espn.com/apis/site/v2/sports/baseball/{kbo|mlb}/scoreboard?dates=YYYYMMDD`
-- 팀 목록: `https://site.api.espn.com/apis/site/v2/sports/baseball/{kbo|mlb}/teams`
-
-KBO 공식 사이트 API (일정/결과용, KBOAPIClient):
+KBO 공식 사이트 API (일정/결과/순위용, KBOAPIClient):
 - `https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList` (POST, 월별 일정)
+- `https://www.koreabaseball.com/ws/Main.asmx/GetTeamRank` (POST, 팀 순위 — 응답 뒤에 HTML이 붙어서 잘라내야 함)
 - 주의: 진행 중 경기에도 현재 스코어를 반환함 → 시작 후 5시간 기준으로 진행 중/종료 판별
 
 네이버 스포츠 API (실시간 라이브용, NaverAPIClient):

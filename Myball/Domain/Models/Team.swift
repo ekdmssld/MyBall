@@ -1,5 +1,5 @@
 // Team.swift
-// 야구팀 모델 + KBO 10개 팀 / MLB 30개 팀 하드코딩 데이터
+// 야구팀 모델 + KBO 10개 팀 하드코딩 데이터
 
 import SwiftUI
 
@@ -8,14 +8,14 @@ import SwiftUI
 // Codable: JSON 변환 + UserDefaults 저장에 필요
 // Equatable: == 비교에 필요
 struct Team: Identifiable, Codable, Equatable, Hashable {
-    let id: String           // ESPN 팀 ID
+    let id: String           // 팀 ID (kbo-samsung 등)
     let name: String         // 팀 전체 이름 (예: "삼성 라이온즈")
     let shortName: String    // 짧은 이름 (예: "삼성")
     let abbreviation: String // 약칭 (예: "SSL")
     let league: League
     let colorHex: String     // 팀 주 색상 (HEX, # 없이)
     let altColorHex: String  // 팀 보조 색상
-    let logoURL: String?     // ESPN 로고 URL (KBO는 없을 수 있음)
+    let logoURL: String?     // 로고 URL (현재 미사용 — 캐릭터로 대체)
 
     // HEX 문자열 → SwiftUI Color 변환
     // computed property: Flutter의 getter와 비슷

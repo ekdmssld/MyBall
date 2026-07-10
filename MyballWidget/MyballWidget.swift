@@ -12,7 +12,6 @@ struct GameEntry: TimelineEntry {
     let team: WidgetTeam?             // 선택된 팀 (없으면 팀 선택 안내)
     let nextGame: WidgetGame?         // 다음 경기
     let upcomingGames: [WidgetGame]   // 이번 주 경기 목록
-    let isKBO: Bool                   // KBO 팀 여부 (API 미지원 안내용)
 }
 
 // MARK: - Timeline Provider
@@ -34,22 +33,19 @@ struct GameTimelineProvider: TimelineProvider {
     func placeholder(in context: Context) -> GameEntry {
         GameEntry(
             date: Date(),
-            team: WidgetTeam.mlbTeams.first,
+            team: WidgetTeam.kboTeams.first,
             nextGame: nil,
-            upcomingGames: [],
-            isKBO: false
+            upcomingGames: []
         )
     }
 
     // snapshot: 위젯 갤러리에서 미리보기 표시
     func getSnapshot(in context: Context, completion: @escaping (GameEntry) -> Void) {
-        let team = loadTeam()
         let entry = GameEntry(
             date: Date(),
-            team: team,
+            team: loadTeam(),
             nextGame: nil,
-            upcomingGames: [],
-            isKBO: team?.league == .kbo
+            upcomingGames: []
         )
         completion(entry)
     }
@@ -61,13 +57,13 @@ struct GameTimelineProvider: TimelineProvider {
 
             guard let team = team else {
                 // 팀이 선택되지 않은 경우
-                let entry = GameEntry(date: Date(), team: nil, nextGame: nil, upcomingGames: [], isKBO: false)
+                let entry = GameEntry(date: Date(), team: nil, nextGame: nil, upcomingGames: [])
                 let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(60 * 30)))
                 completion(timeline)
                 return
             }
 
-            // KBO: 공식 사이트 API / MLB: ESPN API
+            // KBO 공식 사이트 API에서 일정 로드
             let games = await WidgetAPIClient.fetchUpcomingGames(team: team, days: 7)
 
             // 다음 경기 = 현재 시각 이후의 예정된 경기 중 가장 빠른 것
@@ -78,8 +74,7 @@ struct GameTimelineProvider: TimelineProvider {
                 date: Date(),
                 team: team,
                 nextGame: nextGame,
-                upcomingGames: Array(games.prefix(5)),
-                isKBO: false
+                upcomingGames: Array(games.filter { $0.date > now }.prefix(5))
             )
 
             // 30분 후 리프레시
@@ -150,13 +145,7 @@ struct SmallWidgetView: View {
                         .foregroundStyle(.primary)
                 }
 
-                if entry.isKBO {
-                    Spacer()
-                    Text("KBO 데이터\n준비 중")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                } else if let game = entry.nextGame {
+                if let game = entry.nextGame {
                     Spacer()
                     // 상대팀
                     Text(game.opponentAbbr(myTeamId: team.id))
@@ -235,13 +224,7 @@ struct MediumWidgetView: View {
                     .font(.system(size: 12, weight: .bold))
             }
 
-            if entry.isKBO {
-                Spacer()
-                Text("KBO 데이터 준비 중")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                Spacer()
-            } else if let game = entry.nextGame {
+            if let game = entry.nextGame {
                 Spacer()
                 Text("NEXT")
                     .font(.system(size: 10, weight: .bold))
@@ -336,33 +319,15 @@ struct LargeWidgetView: View {
                 // 팀 헤더
                 teamHeader(team: team)
 
-                if entry.isKBO {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 28))
-                                .foregroundStyle(.secondary)
-                            Text("KBO 리그 데이터는\n현재 제공되지 않습니다")
-                                .font(.system(size: 13))
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                        Spacer()
-                    }
-                    Spacer()
-                } else {
-                    // 다음 경기 하이라이트
-                    if let game = entry.nextGame {
-                        nextGameCard(game: game, team: team)
-                    }
-
-                    // 주간 경기 리스트
-                    weeklyGamesList(team: team)
-
-                    Spacer(minLength: 0)
+                // 다음 경기 하이라이트
+                if let game = entry.nextGame {
+                    nextGameCard(game: game, team: team)
                 }
+
+                // 주간 경기 리스트
+                weeklyGamesList(team: team)
+
+                Spacer(minLength: 0)
             }
         } else {
             VStack(spacing: 12) {
@@ -494,18 +459,17 @@ struct LargeWidgetView: View {
 } timeline: {
     GameEntry(
         date: Date(),
-        team: WidgetTeam.mlbTeams[2], // Yankees
+        team: WidgetTeam.kboTeams[0], // 삼성
         nextGame: WidgetGame(
             id: "preview-1",
             date: Date().addingTimeInterval(3600 * 24),
-            homeTeamId: "10", homeTeamName: "New York Yankees", homeTeamAbbr: "NYY",
-            awayTeamId: "2", awayTeamName: "Boston Red Sox", awayTeamAbbr: "BOS",
-            venue: "Yankee Stadium",
+            homeTeamId: "kbo-samsung", homeTeamName: "삼성 라이온즈", homeTeamAbbr: "SSL",
+            awayTeamId: "kbo-lg", awayTeamName: "LG 트윈스", awayTeamAbbr: "LG",
+            venue: "대구",
             homeScore: nil, awayScore: nil,
             statusName: "STATUS_SCHEDULED"
         ),
-        upcomingGames: [],
-        isKBO: false
+        upcomingGames: []
     )
 }
 
@@ -514,20 +478,19 @@ struct LargeWidgetView: View {
 } timeline: {
     GameEntry(
         date: Date(),
-        team: WidgetTeam.mlbTeams[2],
+        team: WidgetTeam.kboTeams[0],
         nextGame: WidgetGame(
             id: "preview-1",
             date: Date().addingTimeInterval(3600 * 24),
-            homeTeamId: "10", homeTeamName: "New York Yankees", homeTeamAbbr: "NYY",
-            awayTeamId: "2", awayTeamName: "Boston Red Sox", awayTeamAbbr: "BOS",
-            venue: "Yankee Stadium",
+            homeTeamId: "kbo-samsung", homeTeamName: "삼성 라이온즈", homeTeamAbbr: "SSL",
+            awayTeamId: "kbo-lg", awayTeamName: "LG 트윈스", awayTeamAbbr: "LG",
+            venue: "대구",
             homeScore: nil, awayScore: nil,
             statusName: "STATUS_SCHEDULED"
         ),
         upcomingGames: [
-            WidgetGame(id: "p1", date: Date().addingTimeInterval(3600*24), homeTeamId: "10", homeTeamName: "Yankees", homeTeamAbbr: "NYY", awayTeamId: "2", awayTeamName: "Red Sox", awayTeamAbbr: "BOS", venue: nil, homeScore: nil, awayScore: nil, statusName: "STATUS_SCHEDULED"),
-            WidgetGame(id: "p2", date: Date().addingTimeInterval(3600*48), homeTeamId: "14", homeTeamName: "Blue Jays", homeTeamAbbr: "TOR", awayTeamId: "10", awayTeamName: "Yankees", awayTeamAbbr: "NYY", venue: nil, homeScore: nil, awayScore: nil, statusName: "STATUS_SCHEDULED"),
-        ],
-        isKBO: false
+            WidgetGame(id: "p1", date: Date().addingTimeInterval(3600*24), homeTeamId: "kbo-samsung", homeTeamName: "삼성", homeTeamAbbr: "SSL", awayTeamId: "kbo-lg", awayTeamName: "LG", awayTeamAbbr: "LG", venue: nil, homeScore: nil, awayScore: nil, statusName: "STATUS_SCHEDULED"),
+            WidgetGame(id: "p2", date: Date().addingTimeInterval(3600*48), homeTeamId: "kbo-kt", homeTeamName: "KT", homeTeamAbbr: "KT", awayTeamId: "kbo-samsung", awayTeamName: "삼성", awayTeamAbbr: "SSL", venue: nil, homeScore: nil, awayScore: nil, statusName: "STATUS_SCHEDULED"),
+        ]
     )
 }

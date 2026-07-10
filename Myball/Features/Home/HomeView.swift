@@ -248,6 +248,8 @@ private struct NextGameCard: View {
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.large))
+        // VoiceOver: 카드 전체를 하나로 묶어서 읽음
+        .accessibilityElement(children: .combine)
     }
 }
 

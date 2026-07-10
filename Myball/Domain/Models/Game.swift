@@ -25,7 +25,7 @@ enum GameStatus: String, Codable {
 
 // MARK: - 경기에 참여하는 팀 정보
 struct GameTeam: Codable, Equatable {
-    let teamId: String       // ESPN 팀 ID
+    let teamId: String       // 팀 ID (kbo-samsung 등)
     let name: String         // 팀 전체 이름
     let abbreviation: String // 약칭 (DET, NYY 등)
     let logoURL: String?     // 로고 이미지 URL
@@ -35,18 +35,18 @@ struct GameTeam: Codable, Equatable {
 
 // MARK: - 경기 모델
 struct Game: Identifiable, Codable, Equatable {
-    let id: String           // ESPN 경기 ID
+    let id: String           // 경기 ID
     let date: Date           // 경기 시작 시간 (UTC)
     let homeTeam: GameTeam   // 홈팀
     let awayTeam: GameTeam   // 원정팀
     let venue: String?       // 경기장 이름
     let status: GameStatus   // 경기 상태
-    let league: League       // KBO / MLB
+    let league: League       // 리그 (KBO)
 
     // MARK: - 헬퍼 메서드
 
     // 내 팀이 홈인지 확인
-    // - teamId: 내 팀의 ESPN ID
+    // - teamId: 내 팀 ID
     func isHome(teamId: String) -> Bool {
         homeTeam.teamId == teamId
     }
